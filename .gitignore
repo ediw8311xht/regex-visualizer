@@ -1,0 +1,5 @@
+*.sh
+*.nvim.lua
+regex-visualizer
+libs/
+
