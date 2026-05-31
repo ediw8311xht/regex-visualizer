@@ -12,6 +12,7 @@
   :components ((:module "src"
                 :components
                 ((:file "package" )
+                 (:file "utilities")
                  (:file "main")
                  ))
                (:static-file "LICENSE" :pathname #P"LICENSE")

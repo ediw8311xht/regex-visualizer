@@ -1,0 +1,145 @@
+(in-package #:regex-visualizer)
+
+(defun send-receive (format-string &rest format-args)
+  "send data to wish and return response mapped to a data type"
+  (apply #'ltk:format-wish
+         (format nil "senddata [~A]" format-string)
+         format-args)
+  (ltk::read-data))
+
+(defun send-receive-string (format-string &rest format-args)
+  "send data to wish and return response as a string"
+  (apply #'ltk:format-wish
+         (format nil "senddatastring [~A]" format-string)
+         format-args)
+  (ltk::read-data))
+
+
+(defun remove-tag  (widget tag &key (start "1.0") (end "end"))
+  (ltk:format-wish "~A tag remove ~A ~A ~A"
+               (ltk:widget-path widget) tag start end))
+
+(defun remove-tags (widget tags)
+  (mapc #'(lambda (x) (remove-tag widget (first x))) tags))
+
+(defgeneric set-tags (txt tags)
+  (:documentation "configure tags for ltk:text"))
+(defmethod set-tags ((txt ltk:text) tags)
+  (loop for (c-tag . c-values) in tags
+        do (apply #'ltk:tag-configure txt c-tag c-values)))
+
+(defgeneric add-tag (txt tag &key start end)
+  (:documentation ""))
+(defmethod add-tag ((txt ltk:text) tag &key (start "1.0") (end "end"))
+  (ltk:format-wish "~A tag add ~A ~A ~A"
+               (ltk:widget-path txt) tag start end))
+
+#| cool trick to get # of lines of text
+| https://stackoverflow.com/questions/4609382/getting-the-total-number-of-lines-in-a-tkinter-text-widget
+|#
+(defun lines (txt)
+  (let ((data-back (send-receive "~A index end-1c" (ltk:widget-path txt))))
+    (truncate data-back)))
+
+(defun text-no-newline (txt &key (start "1.0") (end "end"))
+  (send-receive-string "~A get ~A ~A-1c" (ltk:widget-path txt) start end))
+
+(defun text-line (txt line &key (remove-newline t))
+  (send-receive-string "~A get ~F ~F~A" (ltk:widget-path txt) 
+                       line (+ line 1)
+                       (if remove-newline "-1c" "")))
+
+(defun make-pos (line pos) (format nil "~D.~D" line pos))
+
+;(defun io-main () t){{{
+;
+;(defun main () t)
+;
+;(defclass text-field ()
+;  ((text
+;     :initarg :text
+;     :initform nil
+;     :accessor :text)
+;   (widget
+;     :initform nil
+;     :accessor :wd)
+;   (highlights
+;     :initarg :highlights
+;     :initform nil
+;     :accessor :highlights)
+;   (parent
+;     :initarg :parent
+;     :initform nil
+;     :accessor :parent
+;     )
+;   ))
+;
+;;(defmethod initialize-size-pos-instance :after ((reg regex-field) &rest initargs)
+;;
+;;  (with-slots (text wd highlights) reg
+;;    (setf wd (make-instance 'text ))
+;;    (setf )
+;;
+;;    )
+;;  )
+;;
+;;
+;
+;; recieve data back as a data type
+;(defun send-receive (format-string &rest format-args)
+;
+;  (apply #'format-wish
+;         (format nil "senddata ~A" format-string)
+;         format-args)
+;  (ltk::read-data))
+;
+;; recieve data back as a string
+;(defun send-receive-string (format-string &rest format-args)
+;  (apply #'format-wish
+;         (format nil "senddatastring ~A" format-string)
+;         format-args)
+;  (ltk::read-data))
+;
+;(defun remove-added-newline (str)
+;  (string-right-trim '(#\n) str))
+;
+;(defun remove-tag  (widget tag &key (start "1.0") (end "end"))
+;  (format-wish "~A tag remove ~A ~A ~A"
+;               (widget-path widget) tag start end))
+;
+;(defun remove-tags (widget tags)
+;  (mapc #'(lambda (x) (remove-tag widget (first x))) tags))
+;
+;(defun set-tag (widget tag values)
+;  (apply #'tag-configure widget tag values))
+;
+;(defun set-tags (widget tags)
+;  (loop for (c-tag . c-values) in tags
+;        do (set-tag widget c-tag c-values)))
+;
+;(defun add-tag (widget tag &key (start "1.0") (end "end"))
+;  (format-wish "~A tag add ~A ~A ~A"
+;               (widget-path widget) tag start end))
+;
+;
+;#| cool trick to get # of lines of text
+;| https://stackoverflow.com/questions/4609382/getting-the-total-number-of-lines-in-a-tkinter-text-widget
+;|#
+;(defmethod lines (widget)
+;  (:documentation "Get lines of text from widget")
+;  )
+;(defmethod lines ((widget ltk:text))
+;  (let ((data-back (send-receive "[~A index end-1c]" (widget-path widget))))
+;    (truncate data-back)))
+;
+;(defun text-no-newline (widget &key (start "1.0") (end "end"))
+;  (send-receive-string "[~A get ~A ~A-1c]" (widget-path widget) start end))
+;
+;(defun text-line (widget line &key (remove-newline t))
+;  (send-receive-string "[~A get ~F ~F~A]" (widget-path widget) 
+;                       line (+ line 1)
+;                       (if remove-newline "-1c" "")))
+;
+;(defun make-pos (line pos) (format nil "~D.~D" line pos))
+;(defun remove-added-newline (str)
+;  (string-right-trim '(#\n) str))}}}
