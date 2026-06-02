@@ -3,7 +3,6 @@
 | ---------- to-do ----------
 | - add tree view of regex - `ppcre:parse-string`
 | - add options for multiline-mode, extended-mode, and single-line-mode
-| - match all occurrences on line (do-scans -> loop over scan)
 | ---------- notes ----------
 | panedwindow - resizable window
 |#
@@ -46,12 +45,6 @@
            )
       (labels
         (
-         ;(toggle-text-area (on-off)
-         ;  (if (eq on-off :on)
-         ;      (progn (ltk:configure regex-widget :state :normal)
-         ;             (ltk:configure visual-widget :state :normal))
-         ;      (progn (ltk:configure regex-widget :state :disabled)
-         ;             (ltk:configure visual-widget :state :disabled))))
          (set-match-highlights (line match-start match-end)
            (add-tag visual-widget "match" :start (make-pos line match-start) :end (make-pos line match-end))
            )
@@ -61,10 +54,10 @@
                  do (add-tag visual-widget "group" :start (make-pos line start) :end (make-pos line end))))
          (update-highlights-single (scanner)
            (loop for line from 1 to (+ 1 visual-lines)
-                 for line-text = (text-line visual-widget line)
+                 for line-text = (get-text-line visual-widget line)
                  do 
-                 ;(format t "reg - ~A~%line - ~A~%" (text-no-newline regex-widget) line-text)
-                 (multiple-value-bind (match-start match-end groups-start groups-end) (ppcre:scan scanner line-text)
+                 (ppcre:do-scans (match-start match-end groups-start groups-end scanner line-text)
+                  ;multiple-value-bind (match-start match-end groups-start groups-end) (ppcre:do-scans scanner line-text)
                       (when match-start
                         (set-match-highlights line match-start match-end)
                         (set-groups-highlights line groups-start groups-end)))))
@@ -74,7 +67,7 @@
            (remove-tags visual-widget tags-highlights)
            (remove-tags regex-widget  tags-highlights)
            (setf visual-lines (lines visual-widget))
-           (let ((regex-text (text-no-newline regex-widget)))
+           (let ((regex-text (get-text regex-widget)))
              (handler-case (ppcre:create-scanner regex-text)
                (error (c)
                       (progn (add-tag regex-widget "error")
@@ -108,3 +101,9 @@
                ))
         (main)))))
 
+         ;(toggle-text-area (on-off)
+         ;  (if (eq on-off :on)
+         ;      (progn (ltk:configure regex-widget :state :normal)
+         ;             (ltk:configure visual-widget :state :normal))
+         ;      (progn (ltk:configure regex-widget :state :disabled)
+         ;             (ltk:configure visual-widget :state :disabled))))

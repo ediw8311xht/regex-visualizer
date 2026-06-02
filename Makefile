@@ -24,6 +24,14 @@ deps:
   cd -; \
  fi
 
+clean:
+ @if [ -f "$(BINARY_NAME)" ] ; then \
+  rm $(BINARY_NAME); \
+ fi
+
+clean-deps:
+ rm -rf $(DEP_DIR)
+
 build:
  @echo "Building binary..."
  sbcl \
@@ -36,9 +44,4 @@ build:
   --eval '(ql:quickload :$(APP_SYSTEM))' \
   --eval '(asdf:make :$(APP_SYSTEM) :force t)'
 
-clean:
- rm $(BINARY_NAME)
-
-clean-deps:
- rm -r $(DEP_DIR)
 
