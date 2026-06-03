@@ -20,16 +20,33 @@
 (defun draw-main ()
   (ltk:with-ltk ()
     (let* ((content (make-instance 'ltk:frame))
+           ; ---------- left-side ----------
+           (left-frame    (make-instance 'ltk:frame :master content))
+           (regex-widget-label (make-instance 'ltk:label 
+                                              :master left-frame
+                                              :takefocus 0
+                                              :text "regex:"
+                                              :foreground :green
+                                              :background :black))
+
            (regex-widget (make-instance 'ltk:text
                                         ;:height 20 :width 20
-                                        :master content
+                                        :master left-frame
                                         :wrap :none
                                         :state :normal
                                         :background "#AAAAAA"
                                         ))
+           ; ---------- right-side ----------
+           (right-frame   (make-instance 'ltk:frame :master content))
+           (visual-widget-label (make-instance 'ltk:label 
+                                              :master right-frame
+                                              :takefocus 0
+                                              :text "target text:"
+                                              :foreground :orange
+                                              :background :black))
            (visual-widget (make-instance 'ltk:text
                                          ;:height 20 :width 20
-                                         :master content
+                                         :master right-frame
                                          :wrap :none
                                          :state :normal
                                          :background "#AAAAAA"))
@@ -45,6 +62,42 @@
            )
       (labels
         (
+         (initialize-size-pos ()
+           (ltk:grid-rowconfigure    ltk:*tk* 0 :weight 1)
+           (ltk:grid-columnconfigure ltk:*tk* 0 :weight 1)
+           ; configure content padding and fill entire window
+           ; 2 columns, 1 row [left-frame right-frame]
+           (ltk:configure            content     :padding "12 12 12 12")
+           (ltk:configure            left-frame  :padding "2 2 2 2")
+           (ltk:configure            right-frame :padding "2 2 2 2")
+
+           ; 2 cols 1 row
+           (ltk:grid   content       0 0 :columnspan 2 :rowspan 1 :sticky "nsew" )
+           ; 1 col 3 rows
+           (ltk:grid   left-frame    0 0 :sticky "nsew" :columnspan 1 :rowspan 3)
+           (ltk:grid   right-frame   0 1 :sticky "nsew" :columnspan 1 :rowspan 3)
+
+           (ltk:grid   regex-widget-label  0 0 :sticky "nsew" )
+           (ltk:grid   regex-widget        1 0 :sticky "nsew" )
+           (ltk:grid   visual-widget-label 0 0 :sticky "nsew" )
+           (ltk:grid   visual-widget       1 0 :sticky "nsew" )
+
+           (ltk:grid-rowconfigure    content     0 :weight 1)
+           (ltk:grid-columnconfigure content     0 :weight 1)
+           (ltk:grid-columnconfigure content     1 :weight 1)
+
+           (ltk:grid-rowconfigure    left-frame  0 :weight 1)
+           (ltk:grid-rowconfigure    left-frame  1 :weight 5)
+           (ltk:grid-rowconfigure    left-frame  2 :weight 3)
+
+           (ltk:grid-columnconfigure left-frame  0 :weight 1)
+
+           (ltk:grid-rowconfigure    right-frame 0 :weight 1)
+           (ltk:grid-rowconfigure    right-frame 1 :weight 5)
+           (ltk:grid-rowconfigure    right-frame 2 :weight 3)
+
+           (ltk:grid-columnconfigure right-frame 0 :weight 1)
+           )
          (set-match-highlights (line match-start match-end)
            (add-tag visual-widget "match" :start (make-pos line match-start) :end (make-pos line match-end))
            )
@@ -75,21 +128,6 @@
                (:no-error (v registers)
                 (declare (ignore registers))
                 (update-highlights-single v)))))
-         (initialize-size-pos ()
-           (ltk:grid-rowconfigure ltk:*tk* 0 :weight 1)
-           (ltk:grid-columnconfigure ltk:*tk* 0 :weight 1)
-           ; configure content padding and fill entire window
-           ; 2 columns, 1 row (regex-widget visual-widget)
-           (ltk:configure content :padding "12 12 12 12")
-           (ltk:grid content 0 0 :columnspan 2 :rowspan 1 :sticky "nsew" )
-
-           (ltk:grid-rowconfigure content 0 :weight 1)
-           (ltk:grid-columnconfigure content 0 :weight 1)
-           (ltk:grid-columnconfigure content 1 :weight 1)
-
-           ; configure regex-widget and visual-widget to fill entire column
-           (ltk:grid regex-widget 0 0 :sticky "nsew")
-           (ltk:grid visual-widget 0 1 :sticky "nsew"))
          (main ()
                (initialize-size-pos)
                (set-tags visual-widget tags-highlights) ; set highlighting tags

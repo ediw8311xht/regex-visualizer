@@ -63,7 +63,6 @@
 
 (defgeneric get-text (txt &key start end remove-newline)
   (:documentation ""))
-
 (defmethod get-text ((txt ltk:text) &key (start '(1 0)) (end '("end")) (remove-newline t))
   (unless (listp start) (setf start (list start)))
   (unless (listp end)   (setf end   (list end)))
@@ -78,8 +77,7 @@
   (get-text txt :start (list start 0) :end (list (+ 1 start) 0) :remove-newline remove-newline))
 
 (defun remove-tags (txt tags)
-  (mapc #'(lambda (x) (
-                       remove-tag txt (first x))) tags))
+  (mapc #'(lambda (x) (remove-tag txt (first x))) tags))
 
 ;(defun io-main () t){{{
 ;
