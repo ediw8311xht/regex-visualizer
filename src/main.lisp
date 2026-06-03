@@ -2,7 +2,8 @@
 #|
 | ---------- to-do ----------
 | - add tree view of regex - `ppcre:parse-string`
-| - add options for multi-line-mode, extended-mode, and single-line-mode
+| - show results as strings
+| - hover functionality for groups and matches
 | ---------- notes ----------
 | panedwindow - resizable window
 |#
@@ -77,23 +78,19 @@
       (labels
         (
          (initialize-size-pos ()
-           ; configure content padding and fill entire window
-           ; 2 columns, 1 row left-frame right-frame
            (ltk:configure            content     :padding "12 12 12 12")
            (ltk:configure            left-frame  :padding "2 2 2 2")
            (ltk:configure            right-frame :padding "2 2 2 2")
 
-           ; 2 cols 1 row
-           (ltk:grid   content       0 0 :columnspan 2 :rowspan 1 :sticky "nsew" )
-           ; 1 col 3 rows
+           (ltk:grid   content       0 0 :sticky "nsew" :columnspan 2 :rowspan 1)
            (ltk:grid   left-frame    0 0 :sticky "nsew" :columnspan 1 :rowspan 4)
            (ltk:grid   right-frame   0 1 :sticky "nsew" :columnspan 1 :rowspan 3)
 
            ; left side
-           (ltk:grid   visual-widget-label   0 0 :sticky "nsew" )
-           (ltk:grid   visual-widget         1 0 :sticky "nsew" )
+           (ltk:grid   visual-widget-label    0 0 :sticky "nsew" )
+           (ltk:grid   visual-widget          1 0 :sticky "nsew" )
            (ltk:grid   multi-line-mode-button 2 0 :sticky "nsew")
-           (ltk:grid   extended-mode-button  3 0 :sticky "nsew")
+           (ltk:grid   extended-mode-button   3 0 :sticky "nsew")
 
            ; right side
            (ltk:grid   regex-widget-label  0 0 :sticky "nsew" )
