@@ -28,6 +28,27 @@
   (ltk::read-data))
 
 #|
+| -------------------- grid --------------------
+|#
+
+(defun grid-configure-opt (widget type pos opt_vals)
+  "easily set values and options for: 
+    grid-configure, grid-rowconfigure, grid-columnconfigure "
+  (let ((type-func (case type
+                     (:row           #'ltk:grid-rowconfigure)
+                     ((:col :column) #'ltk:grid-columnconfigure)
+                     (:grid          #'ltk:grid-configure)
+                     (t (error "type: '~A' not applicable to function grid-configure-opt" type)))))
+    (loop for (opt value) on opt_vals by #'cddr
+          do (pprint (list type-func widget pos opt value))
+          (funcall type-func widget pos opt value))))
+
+(defun grid-configure-opts (widget &rest opt_list)
+  "call grid-configure-opt continuously on widget with passed arguments"
+  (loop for (type pos opt_vals) in opt_list
+        do (grid-configure-opt widget type pos opt_vals)))
+
+#|
 | -------------------- general --------------------
 |#
 

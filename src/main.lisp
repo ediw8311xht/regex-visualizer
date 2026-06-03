@@ -63,8 +63,6 @@
       (labels
         (
          (initialize-size-pos ()
-           (ltk:grid-rowconfigure    ltk:*tk* 0 :weight 1)
-           (ltk:grid-columnconfigure ltk:*tk* 0 :weight 1)
            ; configure content padding and fill entire window
            ; 2 columns, 1 row [left-frame right-frame]
            (ltk:configure            content     :padding "12 12 12 12")
@@ -82,21 +80,27 @@
            (ltk:grid   visual-widget-label 0 0 :sticky "nsew" )
            (ltk:grid   visual-widget       1 0 :sticky "nsew" )
 
-           (ltk:grid-rowconfigure    content     0 :weight 1)
-           (ltk:grid-columnconfigure content     0 :weight 1)
-           (ltk:grid-columnconfigure content     1 :weight 1)
-
-           (ltk:grid-rowconfigure    left-frame  0 :weight 1)
-           (ltk:grid-rowconfigure    left-frame  1 :weight 5)
-           (ltk:grid-rowconfigure    left-frame  2 :weight 3)
-
-           (ltk:grid-columnconfigure left-frame  0 :weight 1)
-
-           (ltk:grid-rowconfigure    right-frame 0 :weight 1)
-           (ltk:grid-rowconfigure    right-frame 1 :weight 5)
-           (ltk:grid-rowconfigure    right-frame 2 :weight 3)
-
-           (ltk:grid-columnconfigure right-frame 0 :weight 1)
+           (grid-configure-opts ltk:*tk*
+                                '(:row 0 (:weight 1) )
+                                '(:col 0 (:weight 1) )
+                                )
+           (grid-configure-opts content 
+                     '(:row 0 (:weight 1))
+                     '(:col 0 (:weight 1))
+                     '(:col 1 (:weight 1))
+                     )
+           (grid-configure-opts left-frame
+                     '(:row 0 (:weight 0 :minsize 50))
+                     '(:row 1 (:weight 1 :minsize 100))
+                     '(:row 2 (:weight 0 :minsize 50))
+                     '(:col 0 (:weight 1))
+                     )
+           (grid-configure-opts right-frame
+                     '(:row 0 (:weight 0 :minsize 50))
+                     '(:row 1 (:weight 1 :minsize 100))
+                     '(:row 2 (:weight 0 :minsize 50))
+                     '(:col 0 (:weight 1))
+                     )
            )
          (set-match-highlights (line match-start match-end)
            (add-tag visual-widget "match" :start (make-pos line match-start) :end (make-pos line match-end))
@@ -108,9 +112,7 @@
          (update-highlights-single (scanner)
            (loop for line from 1 to (+ 1 visual-lines)
                  for line-text = (get-text-line visual-widget line)
-                 do 
-                 (ppcre:do-scans (match-start match-end groups-start groups-end scanner line-text)
-                  ;multiple-value-bind (match-start match-end groups-start groups-end) (ppcre:do-scans scanner line-text)
+                 do (ppcre:do-scans (match-start match-end groups-start groups-end scanner line-text)
                       (when match-start
                         (set-match-highlights line match-start match-end)
                         (set-groups-highlights line groups-start groups-end)))))
