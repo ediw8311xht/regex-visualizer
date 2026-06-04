@@ -12,7 +12,6 @@
 | we need to be able to communicate with wish directly, since ltk doesn't
 | (obviously) bind all the tk features
 |#
-
 (defun send-receive (format-string &rest format-args)
   "send data to wish and return response mapped to a data type"
   (apply #'ltk:format-wish
@@ -30,7 +29,6 @@
 #|
 | -------------------- grid --------------------
 |#
-
 (defun grid-configure-opt (widget type pos opt_vals)
   "easily set values and options for: 
     grid-configure, grid-rowconfigure, grid-columnconfigure "
@@ -40,8 +38,7 @@
                      (:grid          #'ltk:grid-configure)
                      (t (error "type: '~A' not applicable to function grid-configure-opt" type)))))
     (loop for (opt value) on opt_vals by #'cddr
-          do (pprint (list type-func widget pos opt value))
-          (funcall type-func widget pos opt value))))
+          do (funcall type-func widget pos opt value))))
 
 (defun grid-configure-opts (widget &rest opt_list)
   "call grid-configure-opt continuously on widget with passed arguments"
@@ -51,8 +48,21 @@
 #|
 | -------------------- general --------------------
 |#
-
 (defun make-pos (line pos) (format nil "~D.~D" line pos))
+
+(defun index-to-pos (txt start end)
+  (let* ((match-string  (subseq txt start end))
+         (before-string (or (when (> start 0) (subseq txt 0 start)) ""))
+         (last-newline-before  (position #\Newline before-string :from-end t))
+         (last-newline-match   (position #\Newline match-string :from-end t))
+
+         (init-lines    (+ 1 (or (count #\Newline before-string) 0)))
+         (init-pos      (if last-newline-before (+ last-newline-before 1) 0))
+         (end-pos       (if last-newline-match  (+ last-newline-match  1) 0))
+         (lines         (or (count #\Newline match-string) 0))) 
+    (values 
+      (make-pos  init-lines           (- start init-pos))
+      (make-pos  (+ init-lines lines) (- end start end-pos)))))
 
 #|
 | -------------------- text  utilities --------------------

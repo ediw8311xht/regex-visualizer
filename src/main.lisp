@@ -1,7 +1,7 @@
 
 #|
 | ---------- to-do ----------
-| - add tree view of regex - `ppcre:parse-string`
+| - add tree view of regex - ppcre:parse-string
 | - show results as strings
 | - hover functionality for groups and matches
 | ---------- notes ----------
@@ -119,20 +119,34 @@
                                 '(:col 0 (:weight 1))
                                 )
            )
-         (set-match-highlights (line match-start match-end)
-           (add-tag visual-widget "match" :start (make-pos line match-start) :end (make-pos line match-end))
-           )
-         (set-groups-highlights (line groups-start groups-end)
+         
+         (set-match-highlights-multi (txt match-start match-end)
+           (multiple-value-bind (start end) (index-to-pos txt match-start match-end)
+             (add-tag visual-widget "match" :start start :end end)))
+         (set-groups-highlights-multi (txt groups-start groups-end)
+           (loop for s across groups-start
+                 for e   across groups-end
+                 do (multiple-value-bind (start end) (index-to-pos txt s e)
+                      (add-tag visual-widget "group" :start start :end end))))
+         (update-highlights-multi-line (scanner) 
+           (let ((txt (get-text visual-widget))) 
+             (ppcre:do-scans (match-start match-end groups-start groups-end scanner txt)
+               (when match-start
+                 (set-match-highlights-multi txt match-start match-end)
+                 (set-groups-highlights-multi txt groups-start groups-end)))))
+         (set-match-highlights-single (line match-start match-end)
+           (add-tag visual-widget "match" :start (make-pos line match-start) :end (make-pos line match-end)))
+         (set-groups-highlights-single (line groups-start groups-end)
            (loop for start across groups-start
                  for end   across groups-end
                  do (add-tag visual-widget "group" :start (make-pos line start) :end (make-pos line end))))
-         (update-highlights-single (scanner)
+         (update-highlights-single-line (scanner)
            (loop for line from 1 to (+ 1 visual-lines)
                  for line-text = (get-text-line visual-widget line)
                  do (ppcre:do-scans (match-start match-end groups-start groups-end scanner line-text)
                       (when match-start
-                        (set-match-highlights line match-start match-end)
-                        (set-groups-highlights line groups-start groups-end)))))
+                        (set-match-highlights-single line match-start match-end)
+                        (set-groups-highlights-single line groups-start groups-end)))))
 
          (text-change (&optional (event nil))
            (declare (ignore event))
@@ -144,10 +158,12 @@
              (handler-case (ppcre:create-scanner regex-text :extended-mode extended-mode :multi-line-mode multi-line-mode)
                (error (c)
                       (progn (add-tag regex-widget "error")
-                             (format t "Error in regex: /~A/" c)))
+                             (format t "Error in regex: ~%~A" c)))
                (:no-error (v registers)
                 (declare (ignore registers))
-                (update-highlights-single v)))))
+                (if multi-line-mode 
+                    (update-highlights-multi-line  v)
+                    (update-highlights-single-line v))))))
          (multi-line-mode-change (value) 
            (setf multi-line-mode (= value 1))
            (text-change))
@@ -167,11 +183,3 @@
            ))
         (main)))))
 
-#|
-(toggle-text-area (on-off)
-  (if (eq on-off :on)
-      (progn (ltk:configure regex-widget :state :normal)
-             (ltk:configure visual-widget :state :normal))
-      (progn (ltk:configure regex-widget :state :disabled)
-             (ltk:configure visual-widget :state :disabled))))
-|#
