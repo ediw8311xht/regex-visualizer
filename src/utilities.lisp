@@ -29,21 +29,30 @@
 #|
 | -------------------- grid --------------------
 |#
-(defun grid-configure-opt (widget type pos opt_vals)
+(defun configure-opt (widget type opt-vals)
   "easily set values and options for: 
-    grid-configure, grid-rowconfigure, grid-columnconfigure "
+    configure, grid-configure, grid-rowconfigure, grid-columnconfigure "
   (let ((type-func (case type
                      (:row           #'ltk:grid-rowconfigure)
                      ((:col :column) #'ltk:grid-columnconfigure)
                      (:grid          #'ltk:grid-configure)
+                     (:configure     #'ltk:configure)
                      (t (error "type: '~A' not applicable to function grid-configure-opt" type)))))
-    (loop for (opt value) on opt_vals by #'cddr
-          do (funcall type-func widget pos opt value))))
+    (if (eql type :configure)
+        (loop for (opt value) on opt-vals by #'cddr
+              do (funcall type-func widget opt value))
+        (loop with pos = (first opt-vals)
+              for (opt value) on (rest opt-vals) by #'cddr
+              do (funcall type-func widget pos opt value)))
+    ;(loop for (opt value) on value by #'cddr
+    ;      do (apply type-func widget values))
+    
+    ))
 
-(defun grid-configure-opts (widget &rest opt_list)
-  "call grid-configure-opt continuously on widget with passed arguments"
-  (loop for (type pos opt_vals) in opt_list
-        do (grid-configure-opt widget type pos opt_vals)))
+(defun configure-opts (widget &rest opt_list)
+  "call configure-opt continuously on widget with passed arguments"
+  (loop for (type opt-vals) on opt_list by #'cddr
+        do (configure-opt widget type opt-vals)))
 
 #|
 | -------------------- general --------------------

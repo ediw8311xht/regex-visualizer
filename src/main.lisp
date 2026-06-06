@@ -1,6 +1,7 @@
 
 #|
 | ---------- to-do ----------
+| - different colors for groups
 | - add tree view of regex - ppcre:parse-string
 | - show results as strings
 | - hover functionality for groups and matches
@@ -38,14 +39,17 @@
                             :state :normal
                             :background "#AAAAAA"
                             ))
+           (buttons
+             (make-instance 'ltk:frame :master left-frame)
+             )
            (multi-line-mode-button
              (make-instance 'ltk:check-button
-                            :master left-frame
+                            :master buttons
                             :text   "multi-line-mode"
                             ))
            (extended-mode-button
              (make-instance 'ltk:check-button
-                            :master left-frame
+                            :master buttons
                             :text   "extended-mode"
                             ))
            ; ---------- right-side ----------
@@ -78,48 +82,46 @@
       (labels
         (
          (initialize-size-pos ()
-           (ltk:configure            content     :padding "12 12 12 12")
-           (ltk:configure            left-frame  :padding "2 2 2 2")
-           (ltk:configure            right-frame :padding "2 2 2 2")
-
-           (ltk:grid   content       0 0 :sticky "nsew" :columnspan 2 :rowspan 1)
-           (ltk:grid   left-frame    0 0 :sticky "nsew" :columnspan 1 :rowspan 4)
-           (ltk:grid   right-frame   0 1 :sticky "nsew" :columnspan 1 :rowspan 3)
-
+           (ltk:grid   content                0 0 :sticky "nsew" :columnspan 2 :rowspan 1)
            ; left side
+           (ltk:grid   left-frame             0 0 :sticky "nsew" :columnspan 1 :rowspan 3)
            (ltk:grid   visual-widget-label    0 0 :sticky "nsew" )
            (ltk:grid   visual-widget          1 0 :sticky "nsew" )
-           (ltk:grid   multi-line-mode-button 2 0 :sticky "nsew")
-           (ltk:grid   extended-mode-button   3 0 :sticky "nsew")
-
+           (ltk:grid   buttons                2 0 :sticky "nsew" :columnspan 2 :rowspan 1)
+           (ltk:grid   multi-line-mode-button 0 0 :sticky "nsew")
+           (ltk:grid   extended-mode-button   0 1 :sticky "nsew")
            ; right side
-           (ltk:grid   regex-widget-label  0 0 :sticky "nsew" )
-           (ltk:grid   regex-widget        1 0 :sticky "nsew" )
+           (ltk:grid   right-frame            0 1 :sticky "nsew" :columnspan 1 :rowspan 3)
+           (ltk:grid   regex-widget-label     0 0 :sticky "nsew" )
+           (ltk:grid   regex-widget           1 0 :sticky "nsew" )
 
-           (grid-configure-opts ltk:*tk*
-                                '(:row 0 (:weight 1) )
-                                '(:col 0 (:weight 1) )
-                                )
-           (grid-configure-opts content
-                                '(:row 0 (:weight 1))
-                                '(:col 0 (:weight 1))
-                                '(:col 1 (:weight 1))
-                                )
-           (grid-configure-opts left-frame
-                                '(:row 0 (:weight 0 :minsize 50))
-                                '(:row 1 (:weight 1 :minsize 100))
-                                '(:row 2 (:weight 0 :minsize 50))
-                                '(:row 3 (:weight 0 :minsize 50))
-                                '(:col 0 (:weight 1))
-                                )
-           (grid-configure-opts right-frame
-                                '(:row 0 (:weight 0 :minsize 50))
-                                '(:row 1 (:weight 1 :minsize 100))
-                                '(:row 2 (:weight 0 :minsize 50))
-                                '(:col 0 (:weight 1))
-                                )
+           (configure-opts ltk:*tk*
+                           :row '(0 :weight 1)
+                           :col '(0 :weight 1)
+                           )
+           (configure-opts content
+                           :configure '(:padding "12 12 12 12")
+                           :row       '(0 :weight 1)
+                           :col       '(0 :weight 1)
+                           :col       '(1 :weight 1)
+                           )
+           (configure-opts left-frame
+                           :configure '(:padding "2 2 2 2")
+                           :row       '(0 :weight 0 :minsize 50)
+                           :row       '(1 :weight 1 :minsize 100)
+                           :row       '(2 :weight 0 :minsize 50)
+                           :col       '(0 :weight 1)
+                           )
+           (configure-opts right-frame
+                           :configure '(:padding "2 2 2 2")
+                           :row       '(0 :weight 0 :minsize 50)
+                           :row       '(1 :weight 1 :minsize 100)
+                           :row       '(2 :weight 0 :minsize 50)
+                           :col       '(0 :weight 1)
+                           )
            )
          
+         ; multi line
          (set-match-highlights-multi (txt match-start match-end)
            (multiple-value-bind (start end) (index-to-pos txt match-start match-end)
              (add-tag visual-widget "match" :start start :end end)))
@@ -134,6 +136,8 @@
                (when match-start
                  (set-match-highlights-multi txt match-start match-end)
                  (set-groups-highlights-multi txt groups-start groups-end)))))
+
+         ; single line
          (set-match-highlights-single (line match-start match-end)
            (add-tag visual-widget "match" :start (make-pos line match-start) :end (make-pos line match-end)))
          (set-groups-highlights-single (line groups-start groups-end)
@@ -167,7 +171,7 @@
          (multi-line-mode-change (value) 
            (setf multi-line-mode (= value 1))
            (text-change))
-         (extended-mode-change  (value) 
+         (extended-mode-change (value) 
            (setf extended-mode  (= value 1))
            (text-change))
          (main ()
