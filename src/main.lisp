@@ -25,18 +25,17 @@
              (make-instance 'ltk:frame :master content))
            (regex-widget-label
              (make-instance 'ltk:label
-                            :master left-frame
-                            :takefocus 0
-                            :text "regex:"
+                            :master     left-frame
+                            :takefocus  0
+                            :text       "regex:"
                             :foreground :green
                             :background :black))
 
            (regex-widget
              (make-instance 'ltk:text
-                            ;:height 20 :width 20
-                            :master left-frame
-                            :wrap :none
-                            :state :normal
+                            :master     left-frame
+                            :wrap       :none
+                            :state      :normal
                             :background "#AAAAAA"
                             ))
            (buttons
@@ -57,17 +56,16 @@
              (make-instance 'ltk:frame :master content))
            (visual-widget-label
              (make-instance 'ltk:label
-                            :master right-frame
-                            :takefocus 0
-                            :text "target text:"
+                            :master     right-frame
+                            :takefocus  0
+                            :text       "target text:"
                             :foreground :orange
                             :background :black))
            (visual-widget
              (make-instance 'ltk:text
-                            ;:height 20 :width 20
-                            :master right-frame
-                            :wrap :none
-                            :state :normal
+                            :master     right-frame
+                            :wrap       :none
+                            :state      :normal
                             :background "#AAAAAA"))
            (tags-highlights
              '(
@@ -145,7 +143,7 @@
                  for end   across groups-end
                  do (add-tag visual-widget "group" :start (make-pos line start) :end (make-pos line end))))
          (update-highlights-single-line (scanner)
-           (loop for line from 1 to (+ 1 visual-lines)
+           (loop for line from 1 to visual-lines
                  for line-text = (get-text-line visual-widget line)
                  do (ppcre:do-scans (match-start match-end groups-start groups-end scanner line-text)
                       (when match-start
@@ -176,8 +174,8 @@
            (text-change))
          (main ()
            (initialize-size-pos)
-           (set-tags visual-widget tags-highlights) ; set highlighting tags
-           (set-tags regex-widget  tags-highlights) ; set highlighting tags
+           (set-tags visual-widget tags-highlights)
+           (set-tags regex-widget  tags-highlights)
            ; to-do
            ; create separate function to create scanner only when <KeyRelease> occurs on regex-widget
            (ltk:bind regex-widget  "<KeyRelease>" #'text-change)
