@@ -2,7 +2,6 @@
 #|
 | ---------- to-do ----------
 | - different colors for groups
-| - add tree view of regex - ppcre:parse-string
 | - show results as strings
 | - hover functionality for groups and matches
 | ---------- notes ----------

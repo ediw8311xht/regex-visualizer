@@ -1,10 +1,4 @@
 
-#| note to anybody reading this code:
-| contact me or create issue on github if there is something i am doing wrong
-| or should fix. i am new to ltk/tcl/tk so there may be things i should do in
-| a different way.
-|#
-
 (in-package #:regex-visualizer)
 #|
 | -------------------- Communication with wish --------------------
@@ -78,24 +72,6 @@
             (rec-make-pos str new-line new-row (+ 1 index) pos remaining))))))
     (rec-make-pos str 1 0 0 (first pos-list) (rest pos-list))))
 
-;(defun index-to-pos (str &rest pos-list &aux (str-len (length str)))
-;  (labels
-;    ((rec-make-pos (str line row index pos remaining)
-        ;       (when pos
-;         (if (>= index str-len)
-              ;             (make-list (+ 1 (length remaining)) :initial-element (make-pos line (+ row 1)))
-;             (let* ((is-newline (char= (aref str index) #\Newline))
-                     ;                    (new-line   (if is-newline (+ line 1) line))
-;                    (new-row    (if is-newline 0 (+ row 1))))
-;               (if (= index pos)
-                    ;                   (cons (make-pos line row)
-;                         (rec-make-pos str new-line new-row (+ 1 index)
-;                                       (first remaining)
-;                                       (rest  remaining)))
-;                   (rec-make-pos str new-line new-row (+ 1 index)
-;                                 pos remaining)))))))
-     ;    (rec-make-pos str 1 0 0 (first pos-list) (rest pos-list))))
-
 #|
 | -------------------- text  utilities --------------------
 |#
@@ -158,23 +134,3 @@
 (defun remove-tags (txt tags)
   (mapc #'(lambda (x) (remove-tag txt (first x))) tags))
 
-; {{{
-;(defclass widget-with-label ()
-;  ((framelabel
-;     :initarg  :framelabel
-;     :initform nil
-;     )
-;   (label-text
-;     :initarg  :label-text
-;     :initform ""
-;     )
-;   (widget
-;     :initarg  :widget
-;     :initform (make-instance 'ltk:widget)
-;     )))
-;
-;(defmethod initialize-instance ((wl widget-with-label) &rest args)
-;  (setf ())
-;
-;  )
-; }}}
