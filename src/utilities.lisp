@@ -6,26 +6,6 @@
 |#
 
 (in-package #:regex-visualizer)
-; {{{
-;(defclass widget-with-label ()
-;  ((framelabel
-;     :initarg  :framelabel
-;     :initform nil
-;     )
-;   (label-text
-;     :initarg  :label-text
-;     :initform ""
-;     )
-;   (widget
-;     :initarg  :widget
-;     :initform (make-instance 'ltk:widget)
-;     )))
-;
-;(defmethod initialize-instance ((wl widget-with-label) &rest args)
-;  (setf ())
-;
-;  )
-; }}}
 #|
 | -------------------- Communication with wish --------------------
 | we need to be able to communicate with wish directly, since ltk doesn't
@@ -78,28 +58,61 @@
   (format nil "~D.~D" line row))
 
 
-(defun index-to-pos (str &rest pos-list
-                         &aux (str-len (length str)))
+(defun index-to-pos (str &rest pos-list &aux (str-len (length str)))
   (labels
     ((rec-make-pos (str line row index pos remaining)
-       (when pos
-         (if (>= index str-len)
-             (make-list (+ 1 (length remaining)) :initial-element (make-pos line (+ row 1)))
-             (let* ((is-newline (char= (aref str index) #\Newline))
-                    (new-line   (if is-newline (+ line 1) line))
-                    (new-row    (if is-newline 0 (+ row 1))))
-               (if (= index pos)
-                   (cons (make-pos line row)
-                         (rec-make-pos str new-line new-row (+ 1 index)
-                                       (first remaining)
-                                       (rest  remaining)))
-                   (rec-make-pos str new-line new-row (+ 1 index)
-                                 pos remaining)))))))
+       (cond
+         ((not pos ) nil)
+
+         ((>= index pos)
+          (cons (make-pos line row) (rec-make-pos str line row index
+                                                  (first remaining)
+                                                  (rest  remaining))))
+         ((>= index str-len)
+          (make-list (+ 1 (length remaining)) :initial-element (make-pos line (+ row 1))))
+
+         (t
+          (let* ((is-newline (char= (aref str index) #\Newline))
+                 (new-line   (if is-newline (+ line 1) line))
+                 (new-row    (if is-newline 0 (+ row 1))))
+            (rec-make-pos str new-line new-row (+ 1 index) pos remaining))))))
     (rec-make-pos str 1 0 0 (first pos-list) (rest pos-list))))
+
+;(defun index-to-pos (str &rest pos-list &aux (str-len (length str)))
+;  (labels
+;    ((rec-make-pos (str line row index pos remaining)
+        ;       (when pos
+;         (if (>= index str-len)
+              ;             (make-list (+ 1 (length remaining)) :initial-element (make-pos line (+ row 1)))
+;             (let* ((is-newline (char= (aref str index) #\Newline))
+                     ;                    (new-line   (if is-newline (+ line 1) line))
+;                    (new-row    (if is-newline 0 (+ row 1))))
+;               (if (= index pos)
+                    ;                   (cons (make-pos line row)
+;                         (rec-make-pos str new-line new-row (+ 1 index)
+;                                       (first remaining)
+;                                       (rest  remaining)))
+;                   (rec-make-pos str new-line new-row (+ 1 index)
+;                                 pos remaining)))))))
+     ;    (rec-make-pos str 1 0 0 (first pos-list) (rest pos-list))))
 
 #|
 | -------------------- text  utilities --------------------
 |#
+(defgeneric set-text-read-only (txt form)
+  (:documentation "Set text for text widget that shouldn't be edited by user."))
+
+(defmethod set-text-read-only ((txt ltk:text) (form function))
+  (funcall form txt))
+
+(defmethod set-text-read-only ((txt ltk:text) (form string))
+  (setf (ltk:text txt) form))
+
+(defmethod set-text-read-only :around ((txt ltk:text) form)
+  (ltk:configure txt :state :normal)
+  (call-next-method)
+  (ltk:configure txt :state :disabled))
+
 (defgeneric remove-tag  (txt tag &key start end)
   (:documentation "remove tag from text widget"))
 (defmethod remove-tag  ((txt ltk:text) tag &key (start "1.0") (end "end"))
@@ -145,3 +158,23 @@
 (defun remove-tags (txt tags)
   (mapc #'(lambda (x) (remove-tag txt (first x))) tags))
 
+; {{{
+;(defclass widget-with-label ()
+;  ((framelabel
+;     :initarg  :framelabel
+;     :initform nil
+;     )
+;   (label-text
+;     :initarg  :label-text
+;     :initform ""
+;     )
+;   (widget
+;     :initarg  :widget
+;     :initform (make-instance 'ltk:widget)
+;     )))
+;
+;(defmethod initialize-instance ((wl widget-with-label) &rest args)
+;  (setf ())
+;
+;  )
+; }}}

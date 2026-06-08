@@ -74,8 +74,7 @@
            (extended-mode   nil)
            )
       (labels
-        (
-         (initialize-size-pos ()
+        ((initialize-size-pos ()
            (ltk:wm-title ltk:*tk* "Regex Visualizer")
            (ltk:minsize  ltk:*tk*  300 300)
 
@@ -128,39 +127,47 @@
                            :col       '(0 :weight 1 )
                            )
            )
-
-         ; multi line
+         #|
+         | setting highlighting for regex-widget and visual-widget
+         |#
+         ; ---------- multi line ----------
          (set-match-highlights-multi (txt match-start match-end)
            (destructuring-bind (start end) (index-to-pos txt match-start match-end)
              (add-tag visual-widget "match" :start start :end end)))
          (set-groups-highlights-multi (txt groups-start groups-end)
            (loop for s across groups-start
                  for e across groups-end
-                 do (destructuring-bind (start end) (index-to-pos txt s e)
-                      (add-tag visual-widget "group" :start start :end end))))
+                 when s do (destructuring-bind (start end) (index-to-pos txt s e)
+                             (add-tag visual-widget "group" :start start :end end))))
          (update-highlights-multi-line (scanner)
            (let ((txt (get-text visual-widget)))
              (ppcre:do-scans (match-start match-end groups-start groups-end scanner txt)
-               (when match-start
-                 (set-match-highlights-multi txt match-start match-end)
-                 (set-groups-highlights-multi txt groups-start groups-end)))))
-
-         ; single line
+               (when match-start  (set-match-highlights-multi  txt match-start  match-end))
+               (when groups-start (set-groups-highlights-multi txt groups-start groups-end)))))
+         ; ---------- single line ----------
          (set-match-highlights-single (line match-start match-end)
            (add-tag visual-widget "match" :start (make-pos line match-start) :end (make-pos line match-end)))
          (set-groups-highlights-single (line groups-start groups-end)
-           (loop for start across groups-start
-                 for end   across groups-end
-                 do (add-tag visual-widget "group" :start (make-pos line start) :end (make-pos line end))))
+           (loop for s across groups-start
+                 for e across groups-end
+                 when s do (add-tag visual-widget "group" :start (make-pos line s) :end (make-pos line e))))
          (update-highlights-single-line (scanner)
            (loop for line from 1 to visual-lines
                  for line-text = (get-text-line visual-widget line)
                  do (ppcre:do-scans (match-start match-end groups-start groups-end scanner line-text)
-                      (when match-start
-                        (set-match-highlights-single line match-start match-end)
-                        (set-groups-highlights-single line groups-start groups-end)))))
-         ;(set-)
-
+                      (when match-start  (set-match-highlights-single  line match-start  match-end))
+                      (when groups-start (set-groups-highlights-single line groups-start groups-end)))))
+         #|
+         | -------------------------------------------------
+         |#
+         (set-regex-parse-tree (regex-text)
+           (let ((parse-tree (ppcre:parse-string regex-text)))
+             (set-text-read-only parse-tree-widget
+                                 (with-output-to-string (s)
+                                   (max-utils:show-structure
+                                     parse-tree
+                                     :output-func (lambda (x) x)
+                                     :output-stream s)))))
          (text-change (&optional (event nil))
            (declare (ignore event))
 
@@ -174,6 +181,7 @@
                              (format t "Error in regex: ~%~A" c)))
                (:no-error (v registers)
                 (declare (ignore registers))
+                (set-regex-parse-tree regex-text)
                 (if multi-line-mode
                     (update-highlights-multi-line  v)
                     (update-highlights-single-line v))))))

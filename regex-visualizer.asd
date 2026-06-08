@@ -2,7 +2,7 @@
 (asdf:defsystem #:regex-visualizer
   :author "Maximilian Ballard"
   :license  "GPLv3"
-  :version "0.0.1"
+  :version "0.0.9"
   :serial t
   :depends-on (
                :maximilian-utils ; general utilities
