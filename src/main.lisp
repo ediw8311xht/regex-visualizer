@@ -131,12 +131,12 @@
 
          ; multi line
          (set-match-highlights-multi (txt match-start match-end)
-           (multiple-value-bind (start end) (index-to-pos txt match-start match-end)
+           (destructuring-bind (start end) (index-to-pos txt match-start match-end)
              (add-tag visual-widget "match" :start start :end end)))
          (set-groups-highlights-multi (txt groups-start groups-end)
            (loop for s across groups-start
-                 for e   across groups-end
-                 do (multiple-value-bind (start end) (index-to-pos txt s e)
+                 for e across groups-end
+                 do (destructuring-bind (start end) (index-to-pos txt s e)
                       (add-tag visual-widget "group" :start start :end end))))
          (update-highlights-multi-line (scanner)
            (let ((txt (get-text visual-widget)))
@@ -159,6 +159,7 @@
                       (when match-start
                         (set-match-highlights-single line match-start match-end)
                         (set-groups-highlights-single line groups-start groups-end)))))
+         ;(set-)
 
          (text-change (&optional (event nil))
            (declare (ignore event))

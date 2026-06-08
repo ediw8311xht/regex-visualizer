@@ -21,7 +21,7 @@
 ;     :initform (make-instance 'ltk:widget)
 ;     )))
 ;
-;(defmethod initialize-instance ((wl widget-with-label) &rest args) 
+;(defmethod initialize-instance ((wl widget-with-label) &rest args)
 ;  (setf ())
 ;
 ;  )
@@ -72,27 +72,36 @@
 #|
 | -------------------- general --------------------
 |#
-(defun make-pos (line pos) (format nil "~D.~D" line pos))
+(defun make-pos (line row)
+  "get the tcl/tk formatted position for a line and row
+  remember: line is 1-indexed, row is 0 indexed"
+  (format nil "~D.~D" line row))
 
-(defun index-to-pos (str start end)
-  (let* ((match-string  (subseq str start end))
-         (before-string (or (when (> start 0) (subseq str 0 start)) ""))
-         (last-newline-before  (position #\Newline before-string :from-end t))
-         (last-newline-match   (position #\Newline match-string :from-end t))
 
-         (init-lines    (+ 1 (or (count #\Newline before-string) 0)))
-         (init-pos      (if last-newline-before (+ last-newline-before 1) 0))
-         (end-pos       (if last-newline-match  (+ last-newline-match  1) 0))
-         (lines         (or (count #\Newline match-string) 0)))
-    (values
-      (make-pos  init-lines           (- start init-pos))
-      (make-pos  (+ init-lines lines) (- end start end-pos)))))
+(defun index-to-pos (str &rest pos-list
+                         &aux (str-len (length str)))
+  (labels
+    ((rec-make-pos (str line row index pos remaining)
+       (when pos
+         (if (>= index str-len)
+             (make-list (+ 1 (length remaining)) :initial-element (make-pos line (+ row 1)))
+             (let* ((is-newline (char= (aref str index) #\Newline))
+                    (new-line   (if is-newline (+ line 1) line))
+                    (new-row    (if is-newline 0 (+ row 1))))
+               (if (= index pos)
+                   (cons (make-pos line row)
+                         (rec-make-pos str new-line new-row (+ 1 index)
+                                       (first remaining)
+                                       (rest  remaining)))
+                   (rec-make-pos str new-line new-row (+ 1 index)
+                                 pos remaining)))))))
+    (rec-make-pos str 1 0 0 (first pos-list) (rest pos-list))))
 
 #|
 | -------------------- text  utilities --------------------
 |#
 (defgeneric remove-tag  (txt tag &key start end)
-  (:documentation ""))
+  (:documentation "remove tag from text widget"))
 (defmethod remove-tag  ((txt ltk:text) tag &key (start "1.0") (end "end"))
   (ltk:format-wish "~A tag remove ~A ~A ~A"
                    (ltk:widget-path txt) tag start end))
@@ -104,7 +113,7 @@
         do (apply #'ltk:tag-configure txt c-tag c-values)))
 
 (defgeneric add-tag (txt tag &key start end)
-  (:documentation ""))
+  (:documentation "add tag to text in text widget"))
 (defmethod add-tag ((txt ltk:text) tag &key (start "1.0") (end "end"))
   (ltk:format-wish "~A tag add ~A ~A ~A"
                    (ltk:widget-path txt) tag start end))
