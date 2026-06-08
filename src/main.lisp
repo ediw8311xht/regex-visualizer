@@ -18,29 +18,22 @@
 |#
 
 (defun draw-main ()
-  (ltk:with-ltk ()
+  (ltk:with-ltk (:debug :maximum)
     (let* ((content (make-instance 'ltk:frame))
            ; ---------- left-side ----------
            (left-frame
              (make-instance 'ltk:frame :master content))
-           (regex-widget-label
-             (make-instance 'ltk:label
-                            :master     left-frame
-                            :takefocus  0
-                            :text       "regex:"
-                            :foreground :green
-                            :background :black))
-
+           (regex-widget-labelframe
+             (make-instance 'ltk:labelframe :master left-frame :text "Regex:"))
            (regex-widget
              (make-instance 'ltk:text
-                            :master     left-frame
+                            :master     regex-widget-labelframe
                             :wrap       :none
                             :state      :normal
                             :background "#AAAAAA"
                             ))
            (buttons
-             (make-instance 'ltk:frame :master left-frame)
-             )
+             (make-instance 'ltk:frame :master left-frame))
            (multi-line-mode-button
              (make-instance 'ltk:check-button
                             :master buttons
@@ -54,44 +47,53 @@
            ; ---------- right-side ----------
            (right-frame
              (make-instance 'ltk:frame :master content))
-           (visual-widget-label
-             (make-instance 'ltk:label
-                            :master     right-frame
-                            :takefocus  0
-                            :text       "target text:"
-                            :foreground :orange
-                            :background :black))
+           (visual-widget-labelframe
+             (make-instance 'ltk:labelframe :master right-frame :text "Target Text:"))
            (visual-widget
              (make-instance 'ltk:text
-                            :master     right-frame
+                            :master     visual-widget-labelframe
                             :wrap       :none
                             :state      :normal
                             :background "#AAAAAA"))
+           (parse-tree-widget
+             (make-instance 'ltk:text
+                            :master     right-frame
+                            :wrap       :none
+                            :state      :disabled
+                            :foreground "#AAAAAA"
+                            :background "#000000"
+                            ))
            (tags-highlights
              '(
                ("match" . (:background :blue   :foreground :white))
                ("group" . (:background :green  :foreground :white))
                ("error" . (:background :red    :foreground :white))
                ))
-           (visual-lines     1)
+           (visual-lines      1)
            (multi-line-mode nil)
-           (extended-mode  nil)
+           (extended-mode   nil)
            )
       (labels
         (
          (initialize-size-pos ()
-           (ltk:grid   content                0 0 :sticky "nsew" :columnspan 2 :rowspan 1)
+           (ltk:wm-title ltk:*tk* "Regex Visualizer")
+           (ltk:minsize  ltk:*tk*  300 300)
+
+           (ltk:grid   content                  0 0 :sticky "nsew" :columnspan 2 :rowspan 1)
            ; left side
-           (ltk:grid   left-frame             0 0 :sticky "nsew" :columnspan 1 :rowspan 3)
-           (ltk:grid   visual-widget-label    0 0 :sticky "nsew" )
-           (ltk:grid   visual-widget          1 0 :sticky "nsew" )
-           (ltk:grid   buttons                2 0 :sticky "nsew" :columnspan 2 :rowspan 1)
-           (ltk:grid   multi-line-mode-button 0 0 :sticky "nsew")
-           (ltk:grid   extended-mode-button   0 1 :sticky "nsew")
+           (ltk:grid   left-frame               0 0 :sticky "nsew" :columnspan 1 :rowspan 3)
+           (ltk:grid   regex-widget-labelframe  0 0 :sticky "nsew" :columnspan 1 :rowspan 1)
+           (ltk:grid   buttons                  1 0 :sticky "nsew" :columnspan 2 :rowspan 1)
+           (ltk:grid   multi-line-mode-button   0 0 :sticky "nsew" )
+           (ltk:grid   extended-mode-button     0 1 :sticky "nsew" )
            ; right side
-           (ltk:grid   right-frame            0 1 :sticky "nsew" :columnspan 1 :rowspan 3)
-           (ltk:grid   regex-widget-label     0 0 :sticky "nsew" )
-           (ltk:grid   regex-widget           1 0 :sticky "nsew" )
+           (ltk:grid   right-frame              0 1 :sticky "nsew" :columnspan 1 :rowspan 2)
+           (ltk:grid   visual-widget-labelframe 0 0 :sticky "nsew" :columnspan 1 :rowspan 1)
+           (ltk:grid   parse-tree-widget        1 0 :sticky "nsew" )
+
+           ; take up entirety of labelframe
+           (ltk:grid   regex-widget             0 0 :sticky "nsew" )
+           (ltk:grid   visual-widget            0 0 :sticky "nsew" )
 
            (configure-opts ltk:*tk*
                            :row '(0 :weight 1)
@@ -105,20 +107,28 @@
                            )
            (configure-opts left-frame
                            :configure '(:padding "2 2 2 2")
-                           :row       '(0 :weight 0 :minsize 50)
-                           :row       '(1 :weight 1 :minsize 100)
-                           :row       '(2 :weight 0 :minsize 50)
+                           :row       '(0 :weight 1 :minsize 100)
+                           :row       '(1 :weight 1 :minsize 50)
                            :col       '(0 :weight 1)
                            )
            (configure-opts right-frame
                            :configure '(:padding "2 2 2 2")
-                           :row       '(0 :weight 0 :minsize 50)
-                           :row       '(1 :weight 1 :minsize 100)
-                           :row       '(2 :weight 0 :minsize 50)
+                           :row       '(0 :weight 1 :minsize 100)
+                           :row       '(1 :weight 1 :minsize 50)
                            :col       '(0 :weight 1)
                            )
+           (configure-opts regex-widget-labelframe
+                           :configure '(:padding "2 2 2 2")
+                           :row       '(0 :weight 1 )
+                           :col       '(0 :weight 1 )
+                           )
+           (configure-opts visual-widget-labelframe
+                           :configure '(:padding "2 2 2 2")
+                           :row       '(0 :weight 1 )
+                           :col       '(0 :weight 1 )
+                           )
            )
-         
+
          ; multi line
          (set-match-highlights-multi (txt match-start match-end)
            (multiple-value-bind (start end) (index-to-pos txt match-start match-end)
@@ -128,8 +138,8 @@
                  for e   across groups-end
                  do (multiple-value-bind (start end) (index-to-pos txt s e)
                       (add-tag visual-widget "group" :start start :end end))))
-         (update-highlights-multi-line (scanner) 
-           (let ((txt (get-text visual-widget))) 
+         (update-highlights-multi-line (scanner)
+           (let ((txt (get-text visual-widget)))
              (ppcre:do-scans (match-start match-end groups-start groups-end scanner txt)
                (when match-start
                  (set-match-highlights-multi txt match-start match-end)
@@ -163,13 +173,13 @@
                              (format t "Error in regex: ~%~A" c)))
                (:no-error (v registers)
                 (declare (ignore registers))
-                (if multi-line-mode 
+                (if multi-line-mode
                     (update-highlights-multi-line  v)
                     (update-highlights-single-line v))))))
-         (multi-line-mode-change (value) 
+         (multi-line-mode-change (value)
            (setf multi-line-mode (= value 1))
            (text-change))
-         (extended-mode-change (value) 
+         (extended-mode-change (value)
            (setf extended-mode  (= value 1))
            (text-change))
          (main ()
