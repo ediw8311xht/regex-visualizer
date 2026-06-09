@@ -131,6 +131,5 @@
             :end   (list (+ 1 start) 0)
             :remove-newline remove-newline))
 
-(defun remove-tags (txt tags)
-  (mapc #'(lambda (x) (remove-tag txt (first x))) tags))
+
 

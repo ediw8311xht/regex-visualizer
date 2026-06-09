@@ -62,18 +62,27 @@
                             :foreground "#AAAAAA"
                             :background "#000000"
                             ))
-           (tags-highlights
+           (regex-widget-tags
              '(
-               ("match" . (:background :blue   :foreground :white))
-               ("group" . (:background :green  :foreground :white))
                ("error" . (:background :red    :foreground :white))
+
+               )
+             )
+           (visual-widget-tags
+             '(
+               ("match"  . (:background :blue   :foreground :white))
+               ("group1" . (:background :green  :foreground :white))
+               ("group2" . (:background :orange :foreground :white))
+               ("group3" . (:background :purple :foreground :white))
+               ("group4" . (:background :teal   :foreground :white))
                ))
            (visual-lines      1)
            (multi-line-mode nil)
            (extended-mode   nil)
            )
       (labels
-        ((initialize-size-pos ()
+        (
+         (initialize-size-pos ()
            (ltk:wm-title ltk:*tk* "Regex Visualizer")
            (ltk:minsize  ltk:*tk*  300 300)
 
@@ -137,7 +146,7 @@
            (loop for s across groups-start
                  for e across groups-end
                  when s do (destructuring-bind (start end) (index-to-pos txt s e)
-                             (add-tag visual-widget "group" :start start :end end))))
+                             (add-tag visual-widget "group1" :start start :end end))))
          (update-highlights-multi-line (scanner)
            (let ((txt (get-text visual-widget)))
              (ppcre:do-scans (match-start match-end groups-start groups-end scanner txt)
@@ -149,29 +158,39 @@
          (set-groups-highlights-single (line groups-start groups-end)
            (loop for s across groups-start
                  for e across groups-end
-                 when s do (add-tag visual-widget "group" :start (make-pos line s) :end (make-pos line e))))
+                 when s do (add-tag visual-widget "group1" :start (make-pos line s) :end (make-pos line e))))
          (update-highlights-single-line (scanner)
            (loop for line from 1 to visual-lines
                  for line-text = (get-text-line visual-widget line)
                  do (ppcre:do-scans (match-start match-end groups-start groups-end scanner line-text)
                       (when match-start  (set-match-highlights-single  line match-start  match-end))
                       (when groups-start (set-groups-highlights-single line groups-start groups-end)))))
+
+         #| ---------- tags ---------- |#
+         (remove-tags (txt tags)
+           (mapc #'(lambda (x) (remove-tag txt (first x))) tags))
          #|
          | -------------------------------------------------
          |#
          (set-regex-parse-tree (regex-text)
            (let ((parse-tree (ppcre:parse-string regex-text)))
-             (set-text-read-only parse-tree-widget
-                                 (with-output-to-string (s)
-                                   (max-utils:show-structure
-                                     parse-tree
-                                     :output-func (lambda (x) x)
-                                     :output-stream s)))))
+             (set-text-read-only
+               parse-tree-widget
+               (with-output-to-string (s)
+                 (max-utils:show-structure
+                   parse-tree
+                   :output-stream s
+                   :output-func
+                   (lambda (x) (typecase x
+                                 ((or cons list hash-table) "")
+                                 (t (if (equalp x #\Space)
+                                        "<Whitespace>"
+                                        x)))))))))
          (text-change (&optional (event nil))
            (declare (ignore event))
 
-           (remove-tags visual-widget tags-highlights)
-           (remove-tags regex-widget  tags-highlights)
+           (remove-tags regex-widget  regex-widget-tags)
+           (remove-tags visual-widget visual-widget-tags)
            (setf visual-lines (lines visual-widget))
            (let ((regex-text (get-text regex-widget)))
              (handler-case (ppcre:create-scanner regex-text :extended-mode extended-mode :multi-line-mode multi-line-mode)
@@ -192,8 +211,8 @@
            (text-change))
          (main ()
            (initialize-size-pos)
-           (set-tags visual-widget tags-highlights)
-           (set-tags regex-widget  tags-highlights)
+           (set-tags visual-widget visual-widget-tags)
+           (set-tags regex-widget  regex-widget-tags)
            ; to-do
            ; create separate function to create scanner only when <KeyRelease> occurs on regex-widget
            (ltk:bind regex-widget  "<KeyRelease>" #'text-change)
