@@ -1,7 +1,6 @@
 
 #|
 | ---------- to-do ----------
-| - different colors for groups
 | - show results as strings
 | - hover functionality for groups and matches
 | ---------- notes ----------
@@ -65,17 +64,17 @@
            (regex-widget-tags
              '(
                ("error" . (:background :red    :foreground :white))
-
-               )
-             )
-           (visual-widget-tags
+               ))
+           (visual-widget-tags-groups
              '(
-               ("match"  . (:background :blue   :foreground :white))
                ("group1" . (:background :green  :foreground :white))
                ("group2" . (:background :orange :foreground :white))
                ("group3" . (:background :purple :foreground :white))
                ("group4" . (:background :teal   :foreground :white))
                ))
+           (visual-widget-tags
+             (cons '("match"  . (:background :blue   :foreground :white))
+                   visual-widget-tags-groups))
            (visual-lines      1)
            (multi-line-mode nil)
            (extended-mode   nil)
@@ -143,10 +142,14 @@
            (destructuring-bind (start end) (index-to-pos txt match-start match-end)
              (add-tag visual-widget "match" :start start :end end)))
          (set-groups-highlights-multi (txt groups-start groups-end)
-           (loop for s across groups-start
-                 for e across groups-end
-                 when s do (destructuring-bind (start end) (index-to-pos txt s e)
-                             (add-tag visual-widget "group1" :start start :end end))))
+           (let* ((*print-circle* t)
+                  (groups (map 'list #'first visual-widget-tags-groups)))
+             (setf (cdr (last groups)) groups)
+             (loop for s across groups-start
+                   for e across groups-end
+                   for group-tag in groups
+                   when s do (destructuring-bind (start end) (index-to-pos txt s e)
+                               (add-tag visual-widget group-tag :start start :end end)))))
          (update-highlights-multi-line (scanner)
            (let ((txt (get-text visual-widget)))
              (ppcre:do-scans (match-start match-end groups-start groups-end scanner txt)
@@ -156,9 +159,13 @@
          (set-match-highlights-single (line match-start match-end)
            (add-tag visual-widget "match" :start (make-pos line match-start) :end (make-pos line match-end)))
          (set-groups-highlights-single (line groups-start groups-end)
-           (loop for s across groups-start
-                 for e across groups-end
-                 when s do (add-tag visual-widget "group1" :start (make-pos line s) :end (make-pos line e))))
+           (let* ((*print-circle* t)
+                  (groups (map 'list #'first visual-widget-tags-groups)))
+             (setf (cdr (last groups)) groups)
+             (loop for s across groups-start
+                   for e across groups-end
+                   for group-tag in groups
+                   when s do (add-tag visual-widget group-tag :start (make-pos line s) :end (make-pos line e)))))
          (update-highlights-single-line (scanner)
            (loop for line from 1 to visual-lines
                  for line-text = (get-text-line visual-widget line)
@@ -211,8 +218,8 @@
            (text-change))
          (main ()
            (initialize-size-pos)
-           (set-tags visual-widget visual-widget-tags)
            (set-tags regex-widget  regex-widget-tags)
+           (set-tags visual-widget visual-widget-tags)
            ; to-do
            ; create separate function to create scanner only when <KeyRelease> occurs on regex-widget
            (ltk:bind regex-widget  "<KeyRelease>" #'text-change)
